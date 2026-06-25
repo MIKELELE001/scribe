@@ -1,0 +1,75 @@
+// Scribe data model — see CLAUDE.md section 8.
+// Local dev uses SQLite (DATABASE_URL=file:./dev.db); swap provider to
+// postgresql for Neon/Supabase on Vercel.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Source {
+  id             String     @id @default(cuid())
+  title          String
+  authorName     String
+  sourceType     SourceType @default(TEXT)
+  sourceUrl      String?
+  content        String
+  payoutAddress  String
+  pricePerUseUsd Decimal
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  citations      Citation[]
+}
+
+model QuerySession {
+  id              String             @id @default(cuid())
+  question        String
+  answer          String
+  status          QuerySessionStatus @default(GENERATED)
+  totalPaymentUsd Decimal
+  createdAt       DateTime           @default(now())
+  citations       Citation[]
+  receipts        PaymentReceipt[]
+}
+
+model Citation {
+  id             String       @id @default(cuid())
+  querySessionId String
+  sourceId       String
+  relevanceScore Float
+  excerptUsed    String?
+  querySession   QuerySession @relation(fields: [querySessionId], references: [id])
+  source         Source       @relation(fields: [sourceId], references: [id])
+}
+
+model PaymentReceipt {
+  id                String        @id @default(cuid())
+  querySessionId    String
+  totalAmountUsd    Decimal
+  status            PaymentStatus @default(PENDING)
+  txHash            String?
+  providerReference String?
+  isMock            Boolean       @default(false)
+  createdAt         DateTime      @default(now())
+  querySession      QuerySession  @relation(fields: [querySessionId], references: [id])
+}
+
+enum SourceType {
+  TEXT
+}
+
+enum QuerySessionStatus {
+  GENERATED
+  PAID
+  FAILED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+}
