@@ -1,14 +1,17 @@
 // Scribe data model — see CLAUDE.md section 8.
-// Local dev uses SQLite (DATABASE_URL=file:./dev.db); swap provider to
-// postgresql for Neon/Supabase on Vercel.
+// Production (Vercel) uses PostgreSQL via Neon/Supabase. DATABASE_URL is the
+// pooled connection string; DIRECT_URL is the direct (non-pooled) connection
+// used for schema pushes/migrations. For offline local dev you can temporarily
+// set provider to "sqlite" with DATABASE_URL="file:./dev.db".
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Source {

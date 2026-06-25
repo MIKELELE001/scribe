@@ -31,7 +31,7 @@ Scribe restores that floor. Every time a grounded answer leans on a creator's wo
 | Styling | CSS Modules |
 | Forms | react-hook-form + zod |
 | AI / LLM | Groq SDK — `llama-3.3-70b-versatile` |
-| Database | Prisma ORM + SQLite (local) / PostgreSQL (Vercel) |
+| Database | Prisma ORM + PostgreSQL (Neon/Supabase) |
 | Payments | Circle / Arc — USDC micropayments on Arc testnet |
 | Payment protocol | x402 (HTTP 402 Payment Required) |
 | Deployment | Vercel |
@@ -47,8 +47,11 @@ cd scribe
 npm install
 
 # 3. Environment variables
-#    Create .env.local (runtime) and .env (Prisma CLI). See section 6.
-#    At minimum set DATABASE_URL and GROQ_API_KEY; keep PAYMENT_MODE=mock for local dev.
+#    Copy the template, then fill in DATABASE_URL, DIRECT_URL, and GROQ_API_KEY.
+cp .env.example .env.local
+cp .env.example .env
+#    Point both at a PostgreSQL database (a free Neon project works well) and
+#    keep PAYMENT_MODE=mock for local dev. See section 6 for all variables.
 
 # 4. Create the database schema
 npm run db:push
@@ -61,7 +64,16 @@ npm run dev
 # → http://localhost:3000
 ```
 
-> **Note:** `.env` is read by the Prisma CLI (`db:push`, `db:seed`); the Next.js runtime reads `.env.local`. Keep `DATABASE_URL` in sync across both. Secrets (`GROQ_API_KEY`, `CIRCLE_API_KEY`, treasury keys) live in `.env.local` only and are never exposed to the client.
+> **Note:** `.env` is read by the Prisma CLI (`db:push`, `db:seed`); the Next.js runtime reads `.env.local`. Keep `DATABASE_URL` / `DIRECT_URL` in sync across both. Secrets (`GROQ_API_KEY`, `CIRCLE_API_KEY`, treasury keys) live in `.env.local` only and are never exposed to the client.
+>
+> **Offline local dev (optional):** to run without Postgres, set `provider = "sqlite"` in `src/prisma/schema.prisma`, drop the `directUrl` line, and use `DATABASE_URL="file:./dev.db"`.
+
+## Deploying to Vercel
+
+1. Provision a PostgreSQL database (e.g. a [Neon](https://neon.tech) project) and copy both the **pooled** connection string (`DATABASE_URL`, with `?pgbouncer=true`) and the **direct** one (`DIRECT_URL`).
+2. Import the repo into Vercel. In **Project → Settings → Environment Variables**, add every variable from section 6 — at minimum `DATABASE_URL`, `DIRECT_URL`, `GROQ_API_KEY`, `PAYMENT_MODE=mock`, and `NEXT_PUBLIC_APP_URL` (your deployment URL).
+3. Deploy. The `build` script runs `prisma generate && prisma db push && next build`, so the schema is applied to your Postgres database automatically on each build.
+4. **Seed once** against the production database (the build does not seed): run `DATABASE_URL=... DIRECT_URL=... npm run db:seed` locally pointed at prod, or trigger it from a one-off job. Seeding is idempotent — it resets the example sources.
 
 ## 6. Environment variable reference
 
@@ -72,8 +84,9 @@ All variables are server-side only unless prefixed `NEXT_PUBLIC_`.
 NODE_ENV=development
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
-# Database
-DATABASE_URL=file:./dev.db          # SQLite for local dev
+# Database (PostgreSQL — Neon/Supabase)
+DATABASE_URL=                       # pooled connection string (runtime)
+DIRECT_URL=                         # direct connection (prisma db push)
 
 # AI
 GROQ_API_KEY=                       # required — server-side only
