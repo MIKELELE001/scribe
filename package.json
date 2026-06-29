@@ -17,6 +17,7 @@
     "seed": "tsx src/prisma/seed.ts"
   },
   "dependencies": {
+    "@circle-fin/developer-controlled-wallets": "^10.7.1",
     "@hookform/resolvers": "^3.9.1",
     "@prisma/client": "^6.1.0",
     "clsx": "^2.1.1",

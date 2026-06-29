@@ -1,7 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 
 // Seed 2–3 example sources so the agent loop is demoable out of the box
-// (CLAUDE.md §18). Payout addresses are placeholder Arc-testnet strings.
+// (CLAUDE.md §18). Payout addresses are valid-format Arc-testnet (EVM) strings
+// so real USDC transfers settle; no one holds their keys (test destinations).
 const prisma = new PrismaClient();
 
 type SeedSource = {
@@ -28,7 +29,7 @@ const SOURCES: SeedSource[] = [
       "for material that agents actually cite, and agents are nudged toward " +
       "selecting only the few highest-value sources rather than scraping " +
       "everything indiscriminately.",
-    payoutAddress: "0xA11ce0000000000000000000000000000000Re5e",
+    payoutAddress: "0x0a6aaa51116f2703100569b1f71b04830e947c99",
     pricePerUseUsd: "0.02",
   },
   {
@@ -44,7 +45,7 @@ const SOURCES: SeedSource[] = [
       "creator earns a small, automatic fee. The amount per use is tiny, but " +
       "across millions of grounded answers it restores a durable income floor " +
       "for the people whose work makes those answers possible.",
-    payoutAddress: "0xB0b0000000000000000000000000000000Wr1ter",
+    payoutAddress: "0x0ec2a4ae2c92244cca536898a53fd2579e471665",
     pricePerUseUsd: "0.01",
   },
   {
@@ -60,7 +61,7 @@ const SOURCES: SeedSource[] = [
       "small and the decision is automatable — exactly the profile of paying " +
       "to unlock a single source. The HTTP 402 status code, long dormant, " +
       "becomes the natural handshake for this market.",
-    payoutAddress: "0xC0ffee00000000000000000000000000Ana1yst5",
+    payoutAddress: "0x5ab2d3c5352e5804c208ee9b6952a9efdc0220e4",
     pricePerUseUsd: "0.03",
   },
 ];
