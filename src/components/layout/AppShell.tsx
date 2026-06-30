@@ -10,6 +10,7 @@ import {
   Library,
   Sparkles,
   ReceiptText,
+  TrendingUp,
 } from "lucide-react";
 import styles from "./AppShell.module.css";
 
@@ -24,6 +25,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/sources", label: "Sources", icon: Library },
   { href: "/ask", label: "Ask Scribe", icon: Sparkles },
   { href: "/receipts", label: "Receipts", icon: ReceiptText },
+  { href: "/demand", label: "Demand", icon: TrendingUp },
 ];
 
 function isActive(pathname: string, href: string): boolean {

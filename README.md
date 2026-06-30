@@ -22,6 +22,8 @@ Scribe restores that floor. Every time a grounded answer leans on a creator's wo
 2. **The agent asks and pays** — Scribe ranks sources by relevance, pays to unlock the top matches in USDC (no human confirmation), and writes a grounded answer.
 3. **The creator earns** — Every answer returns a receipt showing exactly who was paid and how much.
 
+**Grounded-first, never stuck.** Scribe always tries registered sources first. When a relevant source exists, the answer is grounded on it and the creator is paid (above). When *no* registered source is relevant, Scribe still answers — from the model's general knowledge, paying no one and writing no receipt — and logs the question as an unmet topic on the **Creator Demand board** (`/demand`). Creators see what people are asking about that nobody has covered yet, register content for it, and earn the next time it's asked.
+
 ## 4. Tech stack
 
 | Layer | Choice |
@@ -106,7 +108,9 @@ SCRIBE_TREASURY_PRIVATE_KEY=
 1. **Add a source** — Go to `/sources/new`, register an article with a title, content, payout address, and a price per use (e.g. `0.01`). It appears on `/sources`. (Three example sources are already seeded.)
 2. **Ask a question** — Go to `/ask` and ask something the sources can answer, e.g. *"Why do creators need a price per use?"*
 3. **Watch the agent pay** — The agent ranks sources, pays each top match over x402, and returns a grounded answer with inline `[Source N]` citations, the price paid per source, and a payment receipt (total paid + tx/mock reference).
-4. **View receipts** — Go to `/receipts` to see every settlement the agent has made, most recent first.
+4. **Ask something unregistered** — Ask an off-topic question, e.g. *"What is the capital of France?"* Scribe answers from general knowledge, shows an "answered from general knowledge — no payment" notice, and writes no receipt. The question now appears on `/demand`; ask it again and its count increments.
+5. **View receipts** — Go to `/receipts` to see every settlement the agent has made, most recent first.
+6. **View demand** — Go to `/demand` to see the unmet topics ranked by how often they've been asked, each with a one-click link to register a source.
 
 ## 8. Hackathon fit
 

@@ -2,11 +2,13 @@ import { listSourcesWithContent } from "@/lib/queries/listSourcesWithContent";
 import { rankSources } from "@/lib/retrieval/rankSources";
 import { accessSourceContent } from "@/lib/payments/x402Client";
 import { generateGroundedAnswer } from "@/lib/ai/generateGroundedAnswer";
+import { generateGeneralAnswer } from "@/lib/ai/generateGeneralAnswer";
 import type { UnlockedSource } from "@/lib/ai/buildAnswerPrompt";
 import { createQuerySession } from "@/lib/queries/createQuerySession";
 import { attachCitations } from "@/lib/queries/attachCitations";
 import { createReceipt } from "@/lib/queries/createReceipt";
 import { markSessionComplete } from "@/lib/queries/markSessionComplete";
+import { createOrBumpDemandSignal } from "@/lib/queries/createOrBumpDemandSignal";
 import { executeScribePayment } from "@/lib/payments/executeScribePayment";
 import { sumUsd } from "@/lib/format/usd";
 import type { AskCitation, AskResponse } from "@/lib/types/query";
@@ -44,9 +46,38 @@ async function unlockSources(
 }
 
 /**
- * The autonomous ask pipeline (CLAUDE.md §10). Ranks sources, pays to unlock
- * the top matches via x402, generates a grounded answer, then persists the
- * session, citations and payment receipt. No human payment confirmation.
+ * General-knowledge fallback (CLAUDE.md hybrid extension). Runs when no
+ * registered source is relevant: the agent still answers, but from its own
+ * knowledge — so it pays no one and writes no receipt. The question is logged as
+ * a demand signal so creators can register content for it (see /demand).
+ */
+async function runGeneralPath(question: string): Promise<AskResponse> {
+  const answer = await generateGeneralAnswer(question);
+
+  const querySessionId = await createQuerySession({
+    question,
+    answer,
+    totalPaymentUsd: "0.00",
+  });
+  await markSessionComplete(querySessionId, "UNSOURCED");
+  await createOrBumpDemandSignal(question);
+
+  return {
+    success: true,
+    sourced: false,
+    querySessionId,
+    answer,
+    citations: [],
+    totalPaymentUsd: "0.00",
+    receipt: null,
+  };
+}
+
+/**
+ * The autonomous ask pipeline (CLAUDE.md §10, hybrid extension). Ranks sources;
+ * if a relevant source matches it pays to unlock the top matches via x402 and
+ * grounds the answer (citations + receipt). If none matches it falls back to a
+ * general-knowledge answer with no payment. No human payment confirmation.
  */
 export async function runAskPipeline(
   question: string,
@@ -54,16 +85,14 @@ export async function runAskPipeline(
 ): Promise<AskResponse> {
   const sources = await listSourcesWithContent();
   if (sources.length === 0) {
-    return {
-      success: false,
-      empty: true,
-      error: "No sources are registered yet. Add a source first.",
-    };
+    // Nothing registered yet — still answer, from general knowledge.
+    return runGeneralPath(question);
   }
 
   const { ranked, empty } = rankSources(sources, question);
   if (empty) {
-    return { success: false, empty: true, error: "No relevant sources found." };
+    // No source is relevant — fall back to general knowledge, pay no one.
+    return runGeneralPath(question);
   }
 
   const unlocked = await unlockSources(baseUrl, ranked);
@@ -119,6 +148,7 @@ export async function runAskPipeline(
 
   return {
     success: true,
+    sourced: true,
     querySessionId,
     answer,
     citations,

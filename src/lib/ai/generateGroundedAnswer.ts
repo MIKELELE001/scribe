@@ -1,23 +1,8 @@
-import Groq from "groq-sdk";
+import { getGroqClient, GROQ_MODEL } from "./groqClient";
 import {
   buildAnswerPrompt,
   type UnlockedSource,
 } from "./buildAnswerPrompt";
-
-// Groq model locked by spec (CLAUDE.md §2 / §12).
-const GROQ_MODEL = "llama-3.3-70b-versatile";
-
-// Lazily construct the client so a missing key only fails the ask request, not
-// module import / build. Server-side only — GROQ_API_KEY is never public.
-let client: Groq | null = null;
-function getClient(): Groq {
-  const apiKey = process.env.GROQ_API_KEY;
-  if (!apiKey) {
-    throw new Error("GROQ_API_KEY is not configured.");
-  }
-  if (!client) client = new Groq({ apiKey });
-  return client;
-}
 
 /**
  * Generate a grounded answer from the unlocked source material via Groq.
@@ -30,7 +15,7 @@ export async function generateGroundedAnswer(
 ): Promise<string> {
   const messages = buildAnswerPrompt(question, sources);
 
-  const completion = await getClient().chat.completions.create({
+  const completion = await getGroqClient().chat.completions.create({
     model: GROQ_MODEL,
     messages,
     temperature: 0.2,

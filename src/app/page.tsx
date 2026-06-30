@@ -38,8 +38,9 @@ export default function HomePage() {
           <span className={styles.stepNum}>2</span>
           <h3 className={styles.stepTitle}>Agent asks and pays</h3>
           <p className={styles.stepText}>
-            Scribe retrieves the most relevant sources and pays each one in USDC
-            — no human confirmation.
+            Scribe grounds on the most relevant sources and pays each in USDC —
+            no human confirmation. No match? It still answers, and logs the
+            topic as creator demand.
           </p>
         </div>
         <div className={styles.step}>

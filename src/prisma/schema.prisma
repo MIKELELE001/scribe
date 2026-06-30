@@ -61,6 +61,18 @@ model PaymentReceipt {
   querySession      QuerySession  @relation(fields: [querySessionId], references: [id])
 }
 
+// Logged whenever a question finds no relevant registered source and is answered
+// from general knowledge instead. Surfaced on /demand so creators can register
+// content for in-demand topics. Deduped by `normalized` with a running `count`.
+model DemandSignal {
+  id          String   @id @default(cuid())
+  question    String
+  normalized  String   @unique
+  count       Int      @default(1)
+  createdAt   DateTime @default(now())
+  lastAskedAt DateTime @updatedAt
+}
+
 enum SourceType {
   TEXT
 }
@@ -69,6 +81,7 @@ enum QuerySessionStatus {
   GENERATED
   PAID
   FAILED
+  UNSOURCED
 }
 
 enum PaymentStatus {

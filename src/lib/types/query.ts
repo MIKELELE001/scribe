@@ -25,10 +25,13 @@ export type AskReceipt = {
 export type AskResponse =
   | {
       success: true;
+      // true: grounded answer from registered sources (cited + paid).
+      // false: answered from general knowledge — no source matched, nothing paid.
+      sourced: boolean;
       querySessionId: string;
       answer: string;
       citations: AskCitation[];
       totalPaymentUsd: string;
-      receipt: AskReceipt;
+      receipt: AskReceipt | null;
     }
   | { success: false; error: string; empty?: boolean };

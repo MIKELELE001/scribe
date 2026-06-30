@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/shared/EmptyState";
 import { AnswerCard } from "./AnswerCard";
 import { CitationList } from "./CitationList";
 import { ReceiptSummary } from "./ReceiptSummary";
+import { GeneralAnswerNotice } from "./GeneralAnswerNotice";
 import { askSchema, type AskFormValues } from "@/lib/validation/ask";
 import type { AskResponse } from "@/lib/types/query";
 import styles from "./AskForm.module.css";
@@ -72,8 +73,8 @@ export function AskForm() {
         <TextArea
           label="Your question"
           rows={4}
-          placeholder="Ask anything the registered sources might answer…"
-          hint="The agent ranks sources, pays to unlock the top matches, then answers."
+          placeholder="Ask anything…"
+          hint="The agent grounds on registered sources and pays them when relevant — otherwise it answers from general knowledge for free."
           error={errors.question?.message}
           disabled={isLoading}
           {...register("question")}
@@ -107,12 +108,21 @@ export function AskForm() {
 
       {state.status === "answered" && (
         <div className={styles.result}>
-          <AnswerCard answer={state.result.answer} />
-          <CitationList citations={state.result.citations} />
-          <ReceiptSummary
-            receipt={state.result.receipt}
-            totalPaymentUsd={state.result.totalPaymentUsd}
+          <AnswerCard
+            answer={state.result.answer}
+            grounded={state.result.sourced}
           />
+          {state.result.sourced && state.result.receipt ? (
+            <>
+              <CitationList citations={state.result.citations} />
+              <ReceiptSummary
+                receipt={state.result.receipt}
+                totalPaymentUsd={state.result.totalPaymentUsd}
+              />
+            </>
+          ) : (
+            <GeneralAnswerNotice />
+          )}
         </div>
       )}
     </div>

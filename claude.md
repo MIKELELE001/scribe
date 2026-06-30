@@ -646,3 +646,29 @@ If in doubt, don't build it. Ask first.
 ---
 
 *End of spec. Build Scribe exactly as described. One phase at a time. Prioritize a working demo over completeness.*
+
+---
+
+## 22. ADDENDUM — Hybrid answers + Creator Demand board (approved extension, post-deploy)
+
+Approved by the project owner after the initial spec shipped. Extends — does not
+replace — the grounded-only behavior above.
+
+**Hybrid, grounded-first answering.** The ask pipeline tries registered sources
+first. If a relevant source matches, the original flow is unchanged: rank → x402
+pay → grounded answer (locked `SCRIBE_SYSTEM_PROMPT`) → citations + receipt
+(`sourced: true`). If **no** source is relevant, instead of returning the empty
+state the agent answers from general knowledge via a **separate** prompt
+(`lib/ai/generateGeneralAnswer.ts`), pays no one, and writes **no receipt**
+(`sourced: false`). The locked grounded prompt and the pay flow are untouched;
+answers are binary (grounded **or** general), never mixed.
+
+- `AskResponse` success gains `sourced: boolean` and `receipt: AskReceipt | null`.
+- Unsourced sessions persist as `QuerySessionStatus.UNSOURCED`, `totalPaymentUsd "0.00"`.
+
+**Creator Demand board (`/demand`).** Every unsourced question is logged via the
+new `DemandSignal` model (deduped on a normalized question, with a running
+`count`). The `/demand` page lists topics most-requested-first so creators can
+register content and earn next time. Files mirror the receipts pattern:
+`queries/createOrBumpDemandSignal.ts`, `queries/listDemandSignals.ts`,
+`types/demand.ts`, `api/demand/route.ts`, `app/demand/`, `components/demand/`.
